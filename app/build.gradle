@@ -1,0 +1,53 @@
+import com.android.builder.core.DefaultManifestParser
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion "23.0.1"
+
+    lintOptions {
+        abortOnError false
+    }
+
+    signingConfigs {
+        release {
+            storeFile file(RELEASE_STORE_FILE)
+            storePassword RELEASE_STORE_PASSWORD
+            keyAlias RELEASE_KEY_ALIAS
+            keyPassword RELEASE_KEY_PASSWORD
+        }
+    }
+
+    buildTypes {
+        applicationVariants.all { variant ->
+            variant.outputs.each { output ->
+                def manifestParser = new DefaultManifestParser()
+                def androidManifestXml = (File) android.sourceSets.main.manifest.srcFile
+                def String versionName = manifestParser.getVersionName(androidManifestXml)
+                def String pkg = manifestParser.getPackage(androidManifestXml)
+                def String fileName = "${pkg}-${variant.name}-v${versionName}.apk"
+                output.outputFile = new File(output.outputFile.parent,fileName)
+            }
+        }
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+    }
+
+    def publish = project.tasks.create("publishAll")
+    android.applicationVariants.all { variant ->
+        variant.outputs.each { output ->
+            def task = project.tasks.create("publish${output.name}Apk",Copy)
+            task.from(output.outputFile)
+            task.into("/home/prowe/Boxhead/software/android/apks")
+            task.dependsOn variant.assemble
+            publish.dependsOn task
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile 'com.android.support:appcompat-v7:23.0.1'
+}
