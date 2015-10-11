@@ -287,17 +287,21 @@ public final class LullabyService extends Service implements
 						@Override
 						public void onMorseText(String morseText) {
 							String appName = getString(R.string.app_name);
-							Notification note = new Notification(
-									getNotificationIcon(), appName,
-									System.currentTimeMillis());
 							Intent i = new Intent(LullabyService.this,
 									MainActivity.class);
 							i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP
 									| Intent.FLAG_ACTIVITY_SINGLE_TOP);
 							PendingIntent pi = PendingIntent.getActivity(
 									LullabyService.this, 0, i, 0);
-							note.setLatestEventInfo(LullabyService.this,
-									appName, morseText, pi);
+
+                Notification note = new Notification.Builder(LullabyService.this)
+                                .setContentTitle(appName)
+                                .setSmallIcon(getNotificationIcon())
+                                .setContentIntent(pi)
+                                .setWhen(System.currentTimeMillis())
+                                .setContentText(morseText)
+                                .build();
+
 							note.flags |= Notification.FLAG_NO_CLEAR;
 							startForeground(1337, note);
 						}
